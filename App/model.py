@@ -41,6 +41,60 @@ de creacion y consulta sobre las estructuras de datos.
 # -----------------------------------------------------
 #                       API
 # -----------------------------------------------------
+def grafo_nuevo():
+    citybike={"grafo":None}
+    citybike["grafo"] = gr.newGraph(datastructure='ADJ_LIST',
+                                  directed=True,
+                                  size=1000,
+                                  comparefunction=comparar_data)
+    return citybike
+
+def addStation(citibike, stationid):
+    """
+    Adiciona una estación como un vertice del grafo
+    """
+    if not gr.containsVertex(citibike["grafo"], stationid):
+        gr.insertVertex(citibike["grafo"], stationid)
+    return citibike
+
+def addConnection(citibike, origin, destination, duration):
+    """
+    Adiciona un arco entre dos estaciones
+    """
+    edge = gr.getEdge(citibike["grafo"], origin, destination)
+    if edge is None:
+        gr.addEdge(citibike["grafo"], origin, destination, duration)
+    return citibike
+
+def numSCC(graph, sc):
+    sc = scc.KosarajuSCC(graph['grafo'])
+    return scc.connectedComponents(sc)
+
+def sameCC(sc, station1, station2):
+    return scc.stronglyConnected(sc, station1, station2)
+
+def buscar_vertices(graph):
+    return gr.numVertices(graph['grafo'])
+
+def buscar_arcos(graph):
+    return gr.numEdges(graph['grafo'])
+
+
+
+
+
+def addTrip(citibike, trip):
+    """
+    """
+    origin = trip['start station id']
+    destination = trip['end station id']
+    duration = int(trip['tripduration'])
+    addStation(citibike, origin)
+    addStation(citibike, destination)
+    addConnection(citibike, origin, destination, duration)
+
+    
+
 
 # Funciones para agregar informacion al grafo
 
@@ -55,3 +109,11 @@ de creacion y consulta sobre las estructuras de datos.
 # ==============================
 # Funciones de Comparacion
 # ==============================
+def comparar_data(route1,route2):
+    r2=route2["key"]
+    if (route1 == r2):
+        return 0
+    elif (route1 > r2):
+        return 1
+    else:
+        return -1
