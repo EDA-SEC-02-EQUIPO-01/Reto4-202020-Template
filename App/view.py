@@ -31,6 +31,7 @@ from App import controller
 from DISClib.ADT import stack
 import timeit
 assert config
+from time import process_time
 
 """
 La vista se encarga de la interacción con el usuario.
@@ -43,7 +44,10 @@ operación seleccionada.
 #  Variables
 # ___________________________________________________
 
-
+ruta1="201801-1-citibike-tripdata.csv"
+ruta2="201801-2-citibike-tripdata.csv"
+ruta3="201801-3-citibike-tripdata.csv"
+ruta4="201801-4-citibike-tripdata.csv"
 # ___________________________________________________
 #  Menu principal
 # ___________________________________________________
@@ -51,3 +55,40 @@ operación seleccionada.
 """
 Menu principal
 """
+def printMenu():
+    """
+    Imprime el menu de opciones
+    """
+    print("\nBienvenido")
+    print("1- Crear analizador")
+    print("2- Cargar informacion")
+    print("3- Requerimiento 1")
+    print("4- Requerimiento 2")
+    print("5- Requerimiento 3")
+    print("6- Requerimiento 4")
+    print("7- Requerimiento 5")
+    print("0- Salir")
+    
+
+while True:
+    printMenu()
+    entrada=input("Seleccione una opcion pra continuar\n")
+
+    if int(entrada[0])==1:
+        print("Inicializando...\n")
+        time1= process_time()
+        cont=controller.iniciar_grafo()
+        time2=process_time()
+        print(f"Tiempo de ejecucion: {time2-time1} segundos")
+    elif int(entrada[0])==2:
+        print("Inicializando...\n")
+        time1= process_time()
+        controller.loadFile(cont,ruta1)
+        controller.loadFile(cont,ruta2)
+        controller.loadFile(cont,ruta3)
+        controller.loadFile(cont,ruta4)
+        total=controller.retornar_arcos_y_vertices(cont)
+        csc=controller.componentes_fuertemente_conectados(cont)
+        time2=process_time()
+        print(f"Tiempo de ejecucion: {time2-time1} segundos")
+        print(f"Vertices: {total[0]}\nArcos: {total[1]}\nComponentes fuertemente conectados: {csc}")
