@@ -43,8 +43,9 @@ recae sobre el controlador.
 def iniciar_grafo():
     el_grafo=m.grafo_nuevo()
     return el_grafo
-
-
+def iniciar_ref():
+    la_ref=m.tabla_de_referencia()
+    return la_ref
 # ___________________________________________________
 #  Funciones para la carga de datos y almacenamiento
 #  de datos en los modelos
@@ -56,14 +57,14 @@ def loadTrips(analyzer):
             loadFile(analyzer, filename)
     return analyzer
 
-def loadFile(citibike, tripfile):
+def loadFile(citibike, tripfile,reference):
     """
     """
     tripfile = cf.data_dir + tripfile
     input_file = csv.DictReader(open(tripfile, encoding="utf-8"),
                                 delimiter=",")
     for trip in input_file:
-        m.addTrip(citibike, trip)
+        m.addTrip(reference["referencia"],reference["referencia_llegada"],citibike, trip)
     return citibike
 
 # ___________________________________________________
@@ -77,3 +78,18 @@ def retornar_arcos_y_vertices(citybike):
     vert=m.buscar_vertices(citybike)
     arc=m.buscar_arcos(citybike)
     return (vert,arc)
+
+def retornar_vertices_en_cluster(sc,comp1,comp2):
+    return m.sameCC(sc,comp1,comp2)
+
+def retornar_estaciones_top_ingreso(graph,reference_table):
+    return m.buscar_estaciones_top_ingreso(graph["grafo"],reference_table["referencia_llegada"])
+def retornar_estaciones_top_llegada(graph,reference_table):
+    return m.buscar_estaciones_top_llegada(graph["grafo"],reference_table["referencia"])
+def retornar_estaciones_peor_top_llegada(graph,reference_table):
+    return m.buscar_estaciones_top_llegada(graph["grafo"],reference_table["referencia_llegada"])
+
+def Rutaresistencia(grafo,tiempo, estacion_inicio):
+    r= m.resistencia(grafo,tiempo, estacion_inicio)
+    return r
+
