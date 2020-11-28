@@ -30,10 +30,10 @@ import config
 from App import controller
 from DISClib.ADT import stack
 from DISClib.DataStructures import listiterator as it
+from DISClib.ADT import list as lt
 import timeit
 assert config
 from time import process_time
-
 """
 La vista se encarga de la interacción con el usuario.
 Presenta el menu de opciones  y  por cada seleccion
@@ -84,9 +84,45 @@ def imprimir_rutas_req4(cont,tiempo,estacion):
         time= round((rut["tiempo"]/60),2)
         print(f"Puede tomar la estación {inicio} hasta la estación {final} con un tiempo estimado de {time} minutos")
 
+def imprimir_recomendador(cont,ref, rango):
+    recomendador=controller.recomendador_de_rutas(cont,ref,rango)
+    inicio= recomendador["inicio"]
+    llegada= recomendador["llegada"]
+    print(f"La estación en la que inician más viajes personas en su rango de edad es la estación {inicio}\n")
+    print(f"La estación en la que terminan más viajes personas en su rango de edad es la estación {llegada}\n")
+    print("El camino más corto entre el par de estaciones es el siguiente:")
+    camino= recomendador["camino"]
+    if camino== None:
+        print("No existe camino entre esas estaciones")
+    else:
+        ite=it.newIterator(camino)
+        while it.hasNext(ite):
+            ruta=it.next(ite)
+            ruta_ini= ruta['vertexA']
+            ruta_fin= ruta['vertexB']
+            print(f"De la estación {ruta_ini} a la estación {ruta_fin}")
+
+def imprimir_identificador(cont,ref, rango):
+    identificador=controller.Identificacion_de_estaciones_para_publicidad(cont,ref,rango)
+    if identificador == None:
+        print("No existe un par de estaciones para este rango de edad")
+    else:
+        lista=identificador[0]
+        viajes=identificador[1]
+        if lt.size(lista) == 1:
+            print(f"La estación que más utilizan las personas de este grupo de edad con un total de {viajes} viajes es:\n")
+            ele=lt.firstElement(lista)
+            print(f"Estación de inicio {ele[0]} y estacion final {ele[1]}")
+        else:
+            ite=it.newIterator(lista)
+            print(f"La estación que más utilizan las personas de este grupo de edad con un total de {viajes} viajes es:\n")
+            while it.hasNext(ite):
+                ele=it.next(ite)
+                print(f"Estación de inicio {ele[0]} y estacion final {ele[1]}")
+
 while True:
     printMenu()
-    entrada=input("Seleccione una opcion pra continuar\n")
+    entrada=input("Seleccione una opcion para continuar\n")
 
     if int(entrada)==1:
         print("Inicializando...\n")
@@ -99,9 +135,9 @@ while True:
         print("Inicializando...\n")
         time1= process_time()
         controller.loadFile(cont,ruta1,ref)
-        #controller.loadFile(cont,ruta2)
-        #controller.loadFile(cont,ruta3)
-        #controller.loadFile(cont,ruta4)
+        #controller.loadFile(cont,ruta2,ref)
+        #controller.loadFile(cont,ruta3,ref)
+        #controller.loadFile(cont,ruta4,ref)
         total=controller.retornar_arcos_y_vertices(cont)
         csc=controller.componentes_fuertemente_conectados(cont)
         time2=process_time()
@@ -110,6 +146,13 @@ while True:
         componente1=input(f"Ingrese la primera estacion que desea saber si esta en el cluster:\n")
         componente2=input(f"Ingrese la segunda estacion que desea saber si esta en el cluster:\n")
         print(f"{controller.retornar_vertices_en_cluster(csc[1],componente1,componente2)}")
+    elif int(entrada)==4:
+        tiempo=int(input("Ingrese el tiempo limite:\n"))
+        id_s=input("Ingrese el id de la estacion\n")
+        byte=controller.retornar_ruta_circula(cont,ref,tiempo,id_s)
+        for data in byte:
+            print (f"Estacion de inicio: {data[0]}\nEstacion Final: {data[1]}\nTiempo estimado de viaje:{data[2]} Segundos")
+
     elif int(entrada)==5:
         time1=process_time()
         top_llegada=controller.retornar_estaciones_top_ingreso(cont,ref)
@@ -123,15 +166,23 @@ while True:
         estacion= input("Ingrese la estación de ID de la estación de partida: ")
         imprimir_rutas_req4(cont,tiempo,estacion)
         time2=process_time()
+    elif int(entrada)==7:
+        time1= process_time()
+        rango= input("Ingrese su rango de edad: ")
+        imprimir_recomendador(cont,ref,rango)
+        time2=process_time()
     elif int(entrada)==8:
         coor1=float(input("Ingrese la latidud de su posicion actual\n"))
         coor2=float(input("Ingrese la longitud de su posicion actual\n"))
         coor3=float(input("Ingrese la latidud de su destino\n"))
         coor4=float(input("Ingrese la longitud de su destino\n"))
         datz=controller.retornar_ruta_de_interes(cont,ref,coor1,coor2,coor3,coor4)
-        print(datz)
+        print(f"Su estacion mas cerca es: {datz[0]}\nLa estacion mas cercana a su destino es: {datz[1]}\nLa ruta mas rapida pasa por las siguientes estaciones:\n{datz[2]}")
     elif int(entrada)==9:
-            pass
+        time1= process_time()
+        rango= input("Ingrese su rango de edad: ")
+        imprimir_identificador(cont,ref,rango)
+        time2=process_time()
     elif int(entrada)==10:
         bikeid=input("Ingrese el ID de bicicleta\n")
         fecha=input("Ingrese la fecha de la que desea averiguar los viajes:(utilice el formato YY-MM-DD)\n")
