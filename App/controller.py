@@ -1,29 +1,3 @@
-"""
- * Copyright 2020, Departamento de sistemas y Computación
- * Universidad de Los Andes
- *
- *
- * Desarrolado para el curso ISIS1225 - Estructuras de Datos y Algoritmos
- *
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * Contribución de:
- *
- * Dario Correal
- *
- """
-
 import config as cf
 from App import model as m
 import csv
@@ -64,8 +38,9 @@ def loadFile(citibike, tripfile,reference):
     input_file = csv.DictReader(open(tripfile, encoding="utf-8"),
                                 delimiter=",")
     for trip in input_file:
-        m.addTrip(reference["referencia"],reference["referencia_llegada"],citibike, trip)
-    return citibike
+        m.addTrip(reference["referencia"],reference["referencia_llegada"],reference["referencia_estaciones"],citibike, trip)
+    grafo_final=m.conections(citibike,reference)
+    return grafo_final
 
 # ___________________________________________________
 #  Funciones para consultas
@@ -99,3 +74,14 @@ def retornar_ruta_de_interes(graph,ref_table_llegada,coor1,coor2,coor_destino_1,
 
 def retornar_identificador_de_bicicletas_mantenimiento(graph,ref_table,bikeid,fecha):
     return m.identificador_de_bicicletas_mantenimiento(graph["grafo"],ref_table["referencia_llegada"],bikeid,fecha)
+
+def retornar_ruta_circula(graph,ref_table,tiempo,id_estacion):
+    return m.ruta_circula(graph["grafo"],ref_table["referencia_llegada"],tiempo,id_estacion)
+
+def recomendador_de_rutas(grafo,ref,rango):
+    r=m.Recomendador_de_Rutas(grafo,ref,rango)
+    return r
+
+def Identificacion_de_estaciones_para_publicidad(graph,ref,rango):
+    r=m.estaciones_para_publicidad(graph,ref,rango)
+    return r
