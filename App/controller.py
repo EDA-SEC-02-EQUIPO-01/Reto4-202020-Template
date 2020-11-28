@@ -87,9 +87,15 @@ def retornar_estaciones_top_ingreso(graph,reference_table):
 def retornar_estaciones_top_llegada(graph,reference_table):
     return m.buscar_estaciones_top_llegada(graph["grafo"],reference_table["referencia"])
 def retornar_estaciones_peor_top_llegada(graph,reference_table):
-    return m.buscar_estaciones_top_llegada(graph["grafo"],reference_table["referencia_llegada"])
+    return m.buscar_estaciones_peor_top(graph["grafo"],reference_table["referencia_llegada"])
 
 def Rutaresistencia(grafo,tiempo, estacion_inicio):
     r= m.resistencia(grafo,tiempo, estacion_inicio)
     return r
 
+def retornar_ruta_de_interes(graph,ref_table_llegada,coor1,coor2,coor_destino_1,coor_destino_2):
+    r=m.ruta_de_interes(graph["grafo"],ref_table_llegada["referencia_llegada"],coor1,coor2,coor_destino_1,coor_destino_2)
+    return r
+
+def retornar_identificador_de_bicicletas_mantenimiento(graph,ref_table,bikeid,fecha):
+    return m.identificador_de_bicicletas_mantenimiento(graph["grafo"],ref_table["referencia_llegada"],bikeid,fecha)
