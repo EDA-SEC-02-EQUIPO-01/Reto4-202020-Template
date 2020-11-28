@@ -35,6 +35,7 @@ from DISClib.DataStructures import adjlist as adj
 from DISClib.Algorithms.Sorting import mergesort as merge
 from DISClib.Utils import error as error
 assert config
+import datetime
 
 """
 En este archivo definimos los TADs que vamos a usar y las operaciones
@@ -168,7 +169,7 @@ def buscar_estaciones_top_llegada(graph,reference_table):
 
     return final_top
 
-def buscar_estaciones_peor_top_llegada(graph,reference_table):
+def buscar_estaciones_peor_top(graph,reference_table):
     """"Funcion para hallar los viajes que llegan a una estacion!"""
     estaciones=lt.newList()
     vertices=gr.vertices(graph)
@@ -176,16 +177,15 @@ def buscar_estaciones_peor_top_llegada(graph,reference_table):
     while it.hasNext(it_vertice):
         vert=it.next(it_vertice)
         estacion=gr.indegree(graph,vert)
-        nombre=conversor_id_nombre(vert,reference_table)
-        lt.addLast(estaciones,(estacion,nombre))
+        estacion+=gr.outdegree(graph,vert)
+        lt.addLast(estaciones,(estacion,vert))
     merge.mergesort(estaciones,lessFunction)
     final_top=[]
     for i in range(3):
-        top=lt.lastElement(estaciones)
-        final_top.append(top)
-        lt.removeLast(estaciones)
-    return final_top
-
+        top=lt.firstElement(estaciones)
+        nombre=conversor_id_nombre(top[1],reference_table,"end station name")
+        final_top.append((top[0],nombre))
+        lt.removeFirst(estaciones)
     return final_top
 
 
@@ -252,6 +252,82 @@ def resistencia(graph,tiempo, estacion_inicio):
                         m.put(no_repetir,est3,1)
             lt.removeFirst(borrar)         
     return rutas
+
+def Camino_corto (graph,est1,est2):
+    disk=djk.Dijkstra(graph,est1)
+    alter=djk.initSearch(graph,est1)
+    cam=djk.pathTo(alter,est2)
+    
+    return cam
+
+def ruta_de_interes(graph,ref_table_llegada,coor1,coor2,coor_destino_1,coor_destino_2):
+    vertex_list=gr.vertices(graph)
+    it_vertice=it.newIterator(vertex_list)
+    valor_referencia=10
+    valor_referencia2=10
+    nombre_estacion_cercana=0
+    nombre_destino_cercano=0
+    id_estacion_inicial=0
+    id_estacion_final=0
+    while it.hasNext(it_vertice):
+        vert=it.next(it_vertice)
+        coor_origen_1=extractor_de_datos(vert,ref_table_llegada,"end station latitude")
+        coor_origen_2=extractor_de_datos(vert,ref_table_llegada,"end station longitude")
+        cercania_latitud=abs(float(coor_origen_1[0])-coor1)
+        cercania_longitud=abs(float(coor_origen_2[0])-coor2)
+                   
+        if (cercania_latitud+cercania_longitud)<valor_referencia:
+            valor_referencia=cercania_latitud+cercania_longitud
+            nombre_estacion_cercana=coor_origen_1[1]
+            id_estacion_inicial=vert
+        
+        cercania_latitud_final=abs(float(coor_origen_1[0])-coor_destino_1)
+        cercania_longitud_final=abs(float(coor_origen_2[0])-coor_destino_2)
+
+        if (cercania_latitud_final+cercania_longitud_final)<valor_referencia2:
+            valor_referencia2=cercania_latitud+cercania_longitud
+            nombre_destino_cercano=coor_origen_1[1]
+            id_estacion_final=vert
+
+    pila_estacion=Camino_corto(graph,id_estacion_inicial,id_estacion_final)
+
+    return(nombre_estacion_cercana,nombre_destino_cercano)
+
+
+def busca_caminos(graph,vert1,vert2):
+    pass
+
+
+
+
+def extractor_de_datos(id,ref_table,valor_extraible):
+    valor=m.get(ref_table,id)
+    new_data=me.getValue(valor)
+    info=lt.firstElement(new_data)
+    return (info[valor_extraible],info["end station name"])
+
+def identificador_de_bicicletas_mantenimiento(graph,ref_table,bikeid,fecha):
+    vertices=gr.vertices(graph)
+    it_vertice=it.newIterator(vertices)
+    conv2=datetime.datetime.strptime(fecha,"%Y-%m-%d")
+    lista_estaciones=[]
+    time_value=0
+    while it.hasNext(it_vertice):
+        vert=it.next(it_vertice)
+        data_viaje=extractor_de_datos(vert,ref_table,"bikeid")
+        if data_viaje[0]==bikeid:
+            fecha_viaje=extractor_de_datos(vert,ref_table,"starttime")
+            conv1=datetime.datetime.strptime(fecha_viaje[0],"%Y-%m-%d %H:%M:%S.%f")
+            juan=conv1.date()
+            if conv1.date()==conv2.date():
+                estacion=extractor_de_datos(vert,ref_table,"start station name")
+                time_value=+int(extractor_de_datos(vert,ref_table,"tripduration")[0])
+                if estacion[0] not in lista_estaciones:
+                    lista_estaciones.append(estacion[0])
+                if estacion[1] not in lista_estaciones:
+                    lista_estaciones.append(estacion[1])
+    return (time_value,86400-time_value,lista_estaciones)
+
 
 
 
