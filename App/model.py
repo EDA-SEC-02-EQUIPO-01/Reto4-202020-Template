@@ -55,12 +55,11 @@ def grafo_nuevo():
 def tabla_de_referencia():
     ref={"referencia":None,
          "referencia_llegada":None,
-         "rango_edad":None}
+         "referencia_estaciones":None}
     ref["referencia"]=m.newMap(comparefunction=comparar_data)
     ref["referencia_llegada"]=m.newMap(comparefunction=comparar_data)
-    ref["rango_edad"]=m.newMap(comparefunction=comparar_data)
+    ref["referencia_estaciones"]=m.newMap(comparefunction=comparar_tuple)
     return ref
-
 
 def addStation(citibike, stationid):
     """
@@ -70,12 +69,13 @@ def addStation(citibike, stationid):
         gr.insertVertex(citibike["grafo"], stationid)
     return citibike
 
-def addConnection(citibike, origin, destination, duration):
+def addConnection(citibike,reference_tab, origin, destination):
     """
     Adiciona un arco entre dos estaciones
     """
     edge = gr.getEdge(citibike["grafo"], origin, destination)
     if edge is None:
+        duration= promedio(reference_tab,origin,destination)
         gr.addEdge(citibike["grafo"], origin, destination, duration)
     return citibike
 
@@ -110,26 +110,174 @@ def buscar_arcos(graph):
 
 
 
-def addTrip(reference_tab,reference_tab_llegada,citibike, trip):
+def addTrip(reference_tab,reference_tab_llegada,reference_tab_tuple,citibike, trip):
     """
     """
     origin = trip['start station id']
     destination = trip['end station id']
-    duration = int(trip['tripduration'])
-    addStation(citibike, origin)
-    addStation(citibike, destination)
-    addConnection(citibike, origin, destination, duration)
+    ori_des= (trip['start station id'],trip['end station id'])
+    addreference(reference_tab_tuple,ori_des,trip)
     addreference(reference_tab,origin,trip)
     addreference(reference_tab_llegada,destination,trip)
+    addStation(citibike, origin)
+    addStation(citibike, destination)
+
+
+def conections(citibike,reference_tab):
+    estaciones=m.keySet(reference_tab["referencia_estaciones"])
+    ite=it.newIterator(estaciones)
+    while it.hasNext(ite):
+        arco=it.next(ite)
+        origin=arco[0]
+        destination=arco[1]
+        addConnection(citibike,reference_tab, origin, destination)
+    return citibike
+
 
     
+def rangos_de_edad(ref,referencia,rango,suscripcion=None):
+    rangos={"0-10":{},"11-20":{},"21-30":{},"31-40":{},"41-50":{},"51-60":{},"60+":{}}
+    estaciones= m.keySet(ref[referencia])
+    ite= it.newIterator(estaciones)
+    while it.hasNext(ite):
+        nit= it.next(ite)
+        llavevalor=m.get(ref[referencia],nit)
+        lista=me.getValue(llavevalor)
+        it2=it.newIterator(lista)
+        while it.hasNext(it2):
+            nit2= it.next(it2)
+            año= int(nit2["birth year"])
+            edad= 2020-año
+            if edad<= 10:
+                if suscripcion == None:
+                    if nit not in rangos["0-10"]:
+                        rangos["0-10"][nit]=1
+                    else:
+                        rangos["0-10"][nit]+=1
+                else:
+                    if nit2["usertype"] == suscripcion:
+                        if nit not in rangos["0-10"]:
+                            rangos["0-10"][nit]=1
+                        else:
+                            rangos["0-10"][nit]+=1
+
+            elif int(str(edad)[1]) == 0 and not(edad >= 60):
+                if suscripcion == None:
+                    r=str(edad-9)+"-"+str(edad)
+                    if nit not in rangos[r]:
+                        rangos[r][nit]=1
+                    else:
+                        rangos[r][nit]+=1
+                else:
+                    if nit2["usertype"] == suscripcion:
+                        r=str(edad-9)+"-"+str(edad)
+                        if nit not in rangos[r]:
+                            rangos[r][nit]=1
+                        else:
+                            rangos[r][nit]+=1
+
+            elif int(str(edad)[1]) != 0 and not(edad >= 60):
+                if suscripcion == None:
+                    p= int(str(edad)[0])
+                    r= str(p)+"1"+"-"+str(p+1)+"0"
+                    if nit not in rangos[r]:
+                        rangos[r][nit]=1
+                    else:
+                        rangos[r][nit]+=1
+                else:
+                    if nit2["usertype"] == suscripcion:
+                        p= int(str(edad)[0])
+                        r= str(p)+"1"+"-"+str(p+1)+"0"
+                        if nit not in rangos[r]:
+                            rangos[r][nit]=1
+                        else:
+                            rangos[r][nit]+=1
+            else:
+                if suscripcion == None:
+                    if nit not in rangos["60+"]:
+                        rangos["60+"][nit]=1
+                    else:
+                        rangos["60+"][nit]+=1
+                else:
+                    if nit2["usertype"] == suscripcion:
+                        p= int(str(edad)[0])
+                        r= str(p)+"1"+"-"+str(p+1)+"0"
+                        if nit not in rangos[r]:
+                            rangos[r][nit]=1
+                        else:
+                            rangos[r][nit]+=1
+
+    return rangos[rango]
 
 
+def mayor_valor(dict):
+    if dict == {}:
+        return None
+    else:
+        ordenar=sorted(dict.items(),key=lambda x:x[1], reverse=True)
+        return ordenar[0][0]
+
+def Recomendador_de_Rutas(graph,ref,rango):
+    inicio= rangos_de_edad(ref,"referencia",rango)
+    llegada=rangos_de_edad(ref,"referencia_llegada",rango)
+    recomend={}
+    recomend["inicio"]=mayor_valor(inicio)
+    recomend["llegada"]=mayor_valor(llegada)
+    if recomend["inicio"] == None or recomend["llegada"] == None:
+        recomend["camino"]= None
+    else:
+        recomend["camino"]= Camino_corto(graph,recomend["inicio"],recomend["llegada"])
+    return recomend
+
+def estaciones_para_publicidad(graph,ref,rango):
+    suscripcion="Customer"
+    estaciones_en_rango=rangos_de_edad(ref,"referencia_estaciones",rango,suscripcion)
+    estaci=estaciones(estaciones_en_rango)
+    return estaci
+
+def estaciones(dicc):
+    lista=lt.newList
+    maximo= max(dicc.values())
+    for n in dicc:
+        if dicc[n]==maximo:
+            lt.addLast(lista,n)
+    return (lista,maximo)
 # Funciones para agregar informacion al grafo
 
 # ==============================
 # Funciones de consulta
 # ==============================
+
+def ruta_circula(graph,ref_table,tiempo,id_estacion):
+    vertices=gr.vertices(graph)
+    it_vertices=it.newIterator(vertices)
+    list_station=[]
+    while it.hasNext(it_vertices):
+        actual_vertex=it.next(it_vertices)
+        if id_estacion==actual_vertex:
+            confirmador=gr.adjacents(graph,id_estacion)
+            it_confirmador=it.newIterator(confirmador)
+            while it.hasNext(it_confirmador):    
+                ad_vertex=it.next(it_confirmador)
+                pt1=Camino_corto(graph,ad_vertex,id_estacion)
+                if pt1 :
+                    if not lt.isEmpty(pt1):
+                        estacion_final=lt.firstElement(pt1)
+                        final=conversor_id_nombre(estacion_final["vertexA"],ref_table)
+                        final2=conversor_id_nombre(estacion_final["vertexB"],ref_table)
+                        peso=estacion_final["weight"]
+                        list_station.append((final,final2,peso))
+    
+    for i in list_station:
+        if i[2]>tiempo:
+            list_station.remove(i)        
+
+    return list_station
+
+
+
+
+
 def buscar_estaciones_top_ingreso(graph,reference_table):
     """"Funcion para hallar los viajes que llegan a una estacion!"""
     estaciones=lt.newList()
@@ -255,10 +403,10 @@ def resistencia(graph,tiempo, estacion_inicio):
 
 def Camino_corto (graph,est1,est2):
     disk=djk.Dijkstra(graph,est1)
-    alter=djk.initSearch(graph,est1)
-    cam=djk.pathTo(alter,est2)
-    
-    return cam
+    if djk.hasPathTo(disk,est2):
+        cam=djk.pathTo(disk,est2)
+        return cam
+    return None
 
 def ruta_de_interes(graph,ref_table_llegada,coor1,coor2,coor_destino_1,coor_destino_2):
     vertex_list=gr.vertices(graph)
@@ -269,6 +417,9 @@ def ruta_de_interes(graph,ref_table_llegada,coor1,coor2,coor_destino_1,coor_dest
     nombre_destino_cercano=0
     id_estacion_inicial=0
     id_estacion_final=0
+    lt_station=[]
+    
+    
     while it.hasNext(it_vertice):
         vert=it.next(it_vertice)
         coor_origen_1=extractor_de_datos(vert,ref_table_llegada,"end station latitude")
@@ -290,12 +441,18 @@ def ruta_de_interes(graph,ref_table_llegada,coor1,coor2,coor_destino_1,coor_dest
             id_estacion_final=vert
 
     pila_estacion=Camino_corto(graph,id_estacion_inicial,id_estacion_final)
+    if pila_estacion!=None:
+        it_temporal=it.newIterator(pila_estacion)
+        
+        next_item=it.next(it_temporal)
+        bame_station=conversor_id_nombre(next_item["vertexA"],ref_table_llegada,"start station name")
+        bame_station2=conversor_id_nombre(next_item["vertexA"],ref_table_llegada)
+        lt_station.append(bame_station)
+        lt_station.append(bame_station2)
 
-    return(nombre_estacion_cercana,nombre_destino_cercano)
 
 
-def busca_caminos(graph,vert1,vert2):
-    pass
+    return(nombre_estacion_cercana,nombre_destino_cercano,lt_station)
 
 
 
@@ -334,6 +491,18 @@ def identificador_de_bicicletas_mantenimiento(graph,ref_table,bikeid,fecha):
 # ==============================
 # Funciones Helper
 # ==============================
+def promedio(reference_tab,origin,destination):
+    estaciones= m.get(reference_tab["referencia_estaciones"],(origin,destination))
+    lista=me.getValue(estaciones)
+    duracion=0
+    ite= it.newIterator(lista)
+    while it.hasNext(ite):
+        viaje=it.next(ite)
+        duracion+=int(viaje["tripduration"])
+    size=lt.size(lista)
+    promedio= duracion//size
+    return promedio
+
 
 # ==============================
 # Funciones de Comparacion
@@ -364,3 +533,12 @@ def lessFunction(item1,item2):
     if item1<item2:
         return True
     return False
+
+def comparar_tuple(route1,route2):
+    r2=route2["key"]
+    if (route1) == (r2):
+        return 0
+    elif (route1) > (r2):
+        return 1
+    else:
+        return -1
