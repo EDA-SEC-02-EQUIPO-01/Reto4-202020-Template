@@ -226,7 +226,7 @@ def Recomendador_de_Rutas(graph,ref,rango):
     if recomend["inicio"] == None or recomend["llegada"] == None:
         recomend["camino"]= None
     else:
-        recomend["camino"]= Camino_corto(graph,recomend["inicio"],recomend["llegada"])
+        recomend["camino"]= Camino_corto(graph["grafo"],recomend["inicio"],recomend["llegada"])
     return recomend
 
 def estaciones_para_publicidad(graph,ref,rango):
@@ -236,12 +236,15 @@ def estaciones_para_publicidad(graph,ref,rango):
     return estaci
 
 def estaciones(dicc):
-    lista=lt.newList
-    maximo= max(dicc.values())
-    for n in dicc:
-        if dicc[n]==maximo:
-            lt.addLast(lista,n)
-    return (lista,maximo)
+    if dicc == {}:
+        return None
+    else:
+        lista=lt.newList(comparar_tuple)
+        maximo= max(dicc.values())
+        for n in dicc:
+            if dicc[n]==maximo:
+                lt.addLast(lista,n)
+        return (lista,maximo)
 # Funciones para agregar informacion al grafo
 
 # ==============================
@@ -542,3 +545,4 @@ def comparar_tuple(route1,route2):
         return 1
     else:
         return -1
+
