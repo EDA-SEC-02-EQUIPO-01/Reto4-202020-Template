@@ -68,6 +68,9 @@ def printMenu():
     print("5- Requerimiento 3")
     print("6- Requerimiento 4")
     print("7- Requerimiento 5")
+    print("8- Requerimiento 6")
+    print("9- Requerimiento 7")
+    print("10- Requerimiento 8")
     print("0- Salir")
     
 
@@ -85,14 +88,14 @@ while True:
     printMenu()
     entrada=input("Seleccione una opcion pra continuar\n")
 
-    if int(entrada[0])==1:
+    if int(entrada)==1:
         print("Inicializando...\n")
         time1= process_time()
         cont=controller.iniciar_grafo()
         ref=controller.iniciar_ref()
         time2=process_time()
         print(f"Tiempo de ejecucion: {time2-time1} segundos")
-    elif int(entrada[0])==2:
+    elif int(entrada)==2:
         print("Inicializando...\n")
         time1= process_time()
         controller.loadFile(cont,ruta1,ref)
@@ -104,21 +107,38 @@ while True:
         time2=process_time()
         print(f"Tiempo de ejecucion: {time2-time1} segundos")
         print(f"Vertices: {total[0]}\nArcos: {total[1]}\nComponentes fuertemente conectados: {csc[0]}")
-        #componente1=input(f"Ingrese la primera estacion que desea saber si esta en el cluster:\n")
-        #componente2=input(f"Ingrese la segunda estacion que desea saber si esta en el cluster:\n")
-        #print(f"{controller.retornar_vertices_en_cluster(csc[1],int(componente1),int(componente2))}")
-    elif int(entrada[0])==5:
+        componente1=input(f"Ingrese la primera estacion que desea saber si esta en el cluster:\n")
+        componente2=input(f"Ingrese la segunda estacion que desea saber si esta en el cluster:\n")
+        print(f"{controller.retornar_vertices_en_cluster(csc[1],componente1,componente2)}")
+    elif int(entrada)==5:
         time1=process_time()
         top_llegada=controller.retornar_estaciones_top_ingreso(cont,ref)
         top_salida=controller.retornar_estaciones_top_llegada(cont,ref)
-        print(f"Top 3 estaciones con mas llegadas:\n{top_llegada}\nTop 3 estaciones con mas salidas\n{top_salida}\n")
-    elif int(entrada[0])==6:
+        peor_top=controller.retornar_estaciones_peor_top_llegada(cont,ref)
+        time2=process_time()
+        print(f"Top 3 estaciones con mas llegadas:\n{top_llegada}\nTop 3 estaciones con mas salidas\n{top_salida}\nTop 3 estaciones menos visitadas\n{peor_top}\nTiempo de ejecucion: {time2-time1} segundos")
+    elif int(entrada)==6:
         time1= process_time()
         tiempo= int(input("Ingrese el tiempo maximo de resistencia (minutos): "))
         estacion= input("Ingrese la estación de ID de la estación de partida: ")
         imprimir_rutas_req4(cont,tiempo,estacion)
         time2=process_time()
-    elif int(entrada[0])==0:
+    elif int(entrada)==8:
+        coor1=float(input("Ingrese la latidud de su posicion actual\n"))
+        coor2=float(input("Ingrese la longitud de su posicion actual\n"))
+        coor3=float(input("Ingrese la latidud de su destino\n"))
+        coor4=float(input("Ingrese la longitud de su destino\n"))
+        datz=controller.retornar_ruta_de_interes(cont,ref,coor1,coor2,coor3,coor4)
+        print(datz)
+    elif int(entrada)==9:
+            pass
+    elif int(entrada)==10:
+        bikeid=input("Ingrese el ID de bicicleta\n")
+        fecha=input("Ingrese la fecha de la que desea averiguar los viajes:(utilice el formato YY-MM-DD)\n")
+        lista=controller.retornar_identificador_de_bicicletas_mantenimiento(cont,ref,bikeid,fecha)
+        print(f"Segundos totales de uso:{lista[0]}\nSegundos totales de receso:{lista[1]}\nLista de estaciones por las que el usuario {bikeid} ha pasado:\n")
+        for g in lista[2]:
+            print(g)
+    elif int(entrada)==0:
         break
-
 
